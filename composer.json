@@ -1,0 +1,17 @@
+{
+	"name": "stripelabs/dataobjectcoach",
+	"description": "Allows editing of dataobjects structure and content in the Silverstripe CMS",
+	"type": "silverstripe-module",
+	"keywords": ["dataobject", "coach", "dataobjectcoach", "manifest", "tables", "build", "cck", "content", "construction", "construct"],
+	"license": "BSD-3-Clause",
+	"authors": [{
+		"name": "Timothy Best",
+		"email": "superspring@gmail.com",
+		"role": "Developer"
+	}],
+	"homepage": "https://github.com/superspring/dataobjectcoach",
+	"require": {
+		"silverstripe/framework": "~3.0"
+	},
+	"target-dir": "dataobjectcoach"
+}
