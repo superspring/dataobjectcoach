@@ -1,0 +1,53 @@
+UmlCanvas
+by Christophe VG <contact@christophe.vg>
+Copyright 2009-2011, Christophe VG
+
+---
+
+UmlCanvas is an implementation around the HTML5 Canvas that allows
+generation of UML diagrams. A Mediawiki extension is provided to allow
+editors to just enter the commands required to generate the
+diagrams. Two interfaces are provided: an OO Javascript API and a
+textual DSL in the form of a UML profile for ADL, the Application
+Definition Language.
+
+* Try it out now !
+
+Download a complete source archive containing everything you need to play with
+UmlCanvas, including the sources from github:
+
+https://github.com/christophevg/UmlCanvas/downloads
+
+Unzip the archive and open:
+
+examples/index.html
+
+* Ready to dive into the code.
+
+If you want to change and contribute things, you can checkout the git 
+repository locally. You'll probably need a Unix-type of environment with a lot
+of common tools like make, (ub)zip, touch, wget, java,...
+
+$ git clone git://github.com/christophevg/UmlCanvas.git
+Cloning into UmlCanvas...
+...
+Resolving deltas: 100% (673/673), done.
+
+$ cd UmlCanvas
+
+$ make
+*** checking dependencies
+    (if you get errors in this section the cmd right before
+     the error, is not found in your PATH)
+...
+*** building build/UmlCanvas.standalone.min.js
+*** building build/UmlCanvas.css
+
+Open the index.html file from the examples/ directory and take a look around.
+
+* Roadmap
+
+I'm currently working on the foundations of UmlCanvas: Canvas2D, which is also
+hosted on my GitHub account. Development is done in the "next" branch and if
+you check it out, you'll see that a lot is changing. Once that effort is done,
+I'll be updating UmlCanvas to use all of the new goodies.

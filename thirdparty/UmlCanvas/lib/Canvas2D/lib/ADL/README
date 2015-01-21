@@ -1,0 +1,62 @@
+ADL - Abstract Domain Language
+by Christophe VG <contact@christophe.vg>
+Copyright 2009-2011, Christophe VG
+
+---
+
+ADL is a generic language to mostly describe hierarchical stuff, like
+software ;-)
+
+To experience ADL, point your browser to the examples directory and take a 
+look around.
+
+If you are running a system with `make` support you can build everything from
+scratch and run our automated test suite.
+
+In a nutshell:
+$ make
+*** updating submodules
+*** updating submodules
+*** building build/ProtoJS.cli.js
+*** building build/ProtoJS.cli.min.js
+*** generating ADL parser
+*** building build/ADL.shared.js
+*** building build/ADL.shared.min.js
+*** building build/ADL.standalone.js
+*** building build/ADL.standalone.min.js
+*** building build/ADL.cli.js
+*** building build/ADL.cli.min.js
+
+$ ls build
+ADL.cli.js            ADL.parser.js         ADL.shared.min.js     
+ADL.standalone.min.js ADL.cli.min.js        ADL.shared.js         
+ADL.standalone.js
+
+$ make test
+*** updating submodules
+*** updating submodules
+*** building build/ProtoJS.cli.js
+*** building build/ProtoJS.cli.min.js
+*** building build/ADL.cli.js
+*** building build/ADL.cli.min.js
+*** running tests
+-----------------------
+21 tests run.
+0 failed.
+
+$ make dist
+*** updating submodules
+*** updating submodules
+*** building build/ProtoJS.cli.js
+*** building build/ProtoJS.cli.min.js
+*** building build/ADL.shared.js
+*** building build/ADL.shared.min.js
+*** building build/ADL.standalone.js
+*** building build/ADL.standalone.min.js
+*** building build/ADL.cli.js
+*** building build/ADL.cli.min.js
+*** packaging ADL distribution
+*** packaging ADL src distribution
+
+$ ls dist/
+ADL-0.4-10-src.zip ADL-0.4-10.zip     js                 src

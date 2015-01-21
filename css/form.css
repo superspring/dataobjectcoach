@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Makes the UML Canvas look pretty.
+ */
+
+#myCaseTool {
+  height: calc(100% - 168px);
+  width: calc(100% - 315px);
+}
+
+#UC_errors_for_myCaseTool {
+  width: 100%;
+  height: 50px;
+}
+
+#UC_editor_for_myCaseTool {
+  position: absolute;
+  width: 300px;
+  height: calc(100% - 170px);
+}
+
+#Form_EditForm, #Form_EditForm fieldset, #Root, #Root_Main {
+  height: 100%;
+}

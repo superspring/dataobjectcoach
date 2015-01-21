@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="css/text" href="examples.css" />
+
+    <script type="text/javascript" src="../include.js"></script>
+  </head>
+  <body>
+    <h1>Hash Class</h1>
+    <div class="box">
+      <h2>Getting the keys and values</h2>
+      <script>
+	var myHash = $H({ a:10, b:20, c:30, d:"apple", e:"ibm" });
+	document.writeln( myHash.keys() );
+	document.writeln( myHash.values() );
+      </script>
+    </div>
+    <div class="box">
+      <h2>Checking a Hash HAS a KEY or a VALUE</h2>
+      <script>
+	document.writeln( myHash.hasKey( "apple" ) );
+	document.writeln( myHash.hasValue( "apple" ) );
+	document.writeln( myHash.hasKey( "microsoft" ) );
+	document.writeln( myHash.hasValue( "microsoft" ) );
+      </script>
+    </div>
+    <div class="box">
+      <h2>Iterating over a Hash</h2>
+      <script>
+	myHash.iterate( function(key, value) {
+	  document.writeln( key + " = " + value );
+	});
+      </script>
+    </div>
+  </body>
+</html>

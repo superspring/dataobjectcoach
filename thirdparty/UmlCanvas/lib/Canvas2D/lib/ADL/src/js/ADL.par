@@ -1,0 +1,419 @@
+/~
+	ADL, Javascript implementation for the Abstract Definition Language
+	Copyright 2009-2010 by Christophe VG
+
+	ADL Format: everything is a construct:
+	type name : super +modifier <= value {
+	  <constructs>	    
+	}
+
+	This parser returns an AST of constructs, aka ACT ;-)
+~/
+	
+[*
+
+// top-level ADL namespace
+var ADL = {};
+
+ADL.base = Class.extend( {
+	getValue: function getValue() {
+		return this.value;
+	}
+} );
+
+ADL.Boolean = ADL.base.extend( {
+  init: function( value ) {
+    this.value = value == "true" ? true : false;
+  },
+
+  toString: function() {
+    return this.value ? "true" : "false";
+  }
+});
+
+ADL.Integer = ADL.base.extend( {
+  init: function( value ) {
+    this.value = parseInt(value);
+  },
+
+  toString: function() {
+    return this.value;
+  }
+});
+
+ADL.String = ADL.base.extend( {
+  init: function( value ) {
+    this.value = value;
+  },
+
+  toString: function() {
+    return '"' + this.value + '"';
+  }
+});
+
+ADL.Value = Class.extend( {
+	init: function( value ) {
+		this.value = value;
+	},
+	
+	getValue: function getValue() {
+		return this.value.getValue();
+	},
+	
+	toString: function() {
+		return " <= " + this.value.toString();
+	}
+} );
+
+ADL.Annotation = ADL.base.extend( {
+  init: function( value ) {
+    this.value = value;
+  },
+
+  toString: function() {
+    return "[@" + this.value + "]";
+  }
+});
+
+ADL.Multiplicity = Class.extend( {
+  init: function( low, high ) {
+    this.low = low;
+    this.high = high;
+  },
+
+	getLow: function getLow() {
+		return this.low;
+	},
+	
+	getHigh: function getHigh() {
+		return this.high;
+	},
+
+  toString: function() {
+    return "[" + this.low + ( this.high ? ".." + this.high : "" ) + "]";
+  }
+});
+
+ADL.Reference = Class.extend( {
+  init: function( constructName, multiplicity ) {
+    this.constructName = constructName;
+    this.multiplicity = multiplicity;
+  },
+
+	getConstructName: function getConstructName() {
+		return this.constructName;
+	},
+	
+	getMultiplicity: function getMultiplicity() {
+		return this.multiplicity;
+	},
+
+  toString: function() {
+    return this.constructName + 
+    ( this.multiplicity ? this.multiplicity.toString() : "" );
+  }
+});
+
+ADL.Modifier = ADL.base.extend( {
+  init: function( name, value ) {
+    this.name = name;
+    this.value = value;
+  },
+
+	getName: function getName() {
+		return this.name;
+	},
+
+  toString: function() {
+    return "+" + this.name + 
+    ( this.value ? "=" + this.value.toString() : "" );
+  }
+});
+
+ADL.Construct = Class.extend( {
+  init: function(type, name, value, annotations, supers, modifiers, children){
+    this.type        = type;
+    this.name        = name;
+    this.value       = value       || null;
+    this.annotations = annotations || new Array();
+    this.supers      = supers      || new Array();
+    this.children    = children    || new Array();
+    this.modifiers   = new Hash();
+		if( modifiers ) {
+			modifiers.iterate( function(modifier) {
+				this.addModifier(modifier);
+			}.scope(this) );
+		}
+  },
+
+	getType: function getType() {
+		return this.type;
+	},
+	
+	getName: function getName() {
+		return this.name;
+	},
+	
+	setName: function setName(name) {
+		this.name = name
+	},
+	
+	getValue: function getValue() {
+		return this.value;
+	},
+	
+	setValue: function setValue(value) {
+		if( ! ( value instanceof ADL.Value ) ) { value = new ADL.Value(value); }
+		this.value = value;
+	},
+	
+	getAnnotations: function getAnnotations() {
+		return this.annotations;
+	},
+	
+	addAnnotation: function addAnnotation(annotation) {
+		if( ! ( annotation instanceof ADL.Annotation ) ) {
+			annotation = new ADL.Annotation(annotation);
+		}
+		this.annotations.push(annotation);
+		return this;
+	},
+	
+	getSupers: function getSupers() {
+		return this.supers;
+	},
+	
+	addSuper: function addSuper(zuper) {
+		this.supers.push(zuper);
+		return this;
+	},
+	
+	getModifiers: function getModifiers() {
+		return this.modifiers.values();
+	},
+	
+	getModifier: function getModifier(name) {
+		return this.modifiers.get(name);
+	},
+	
+	addModifier: function addModifier(modifier, value) {
+		if( ! ( modifier instanceof ADL.Modifier ) ) {
+			modifier = new ADL.Modifier(modifier, value);
+		}
+		this.modifiers.set(modifier.getName(), modifier);
+	},
+
+	getChildren: function getChildren() {
+		return this.children;
+	},
+	
+	addChild: function addChild(child) {
+		this.children.push(child);
+		return this;
+	},
+
+  toString: function(ident) {
+    ident = ident || "";
+
+    var annotations = new Array();
+    this.annotations.iterate(function(value) { 
+      annotations.push( value.toString() ); 
+    });
+
+    var modifiers = new Array();
+    this.modifiers.iterate(function(key, value) { 
+      modifiers.push( value.toString() ); 
+    });
+
+    var children = new Array();
+    this.children.iterate( function(item) { 
+      children.push( item.toString("  " + ident) ); 
+    });
+
+		return ( annotations.length > 0 ? 
+			ident + annotations.join("\n" + ident) + "\n" : "" ) 
+			+ ident + this.type 
+			+ " " + this.name
+			+ ( this.supers.length > 0 ? " : " + this.supers.join(" : ") : "" )
+			+ ( modifiers.length  > 0 ? " "   + modifiers.join(" ") : "" )
+			+ ( this.value ? this.value.toString() : "" )
+			+ ( children.length > 0 ? 
+				" {" + "\n" + children.join( "\n") + "\n" + ident + "}" : ";" );
+  },
+
+  accept: function( visitor, data ) {
+    return visitor.visit(this, data);
+  },
+
+  childrenAccept: function( visitor, data ) {
+    this.children.iterate(function(child) { visitor.visit(child, data); } );
+    return data;
+  }
+} );
+
+ADL.include = function( file ) {
+  var adl = new ProtoJS.Ajax().fetch( file.value + ".adl" );
+  return new ADL.Parser().parse(adl).getRoot().getChildren();
+}
+
+ADL.AST = Class.extend( {
+  init: function(children) {
+	  this.root = 
+			new ADL.Construct( "", "root", null, null, null, null, children );
+  },
+
+  getRoot: function() {
+    return this.root;
+  }
+});
+
+ADL.ast = null;
+
+ADL.Parser = Class.extend( {
+  parse: function( src ) {
+    var error_cnt = 0;
+    var error_off = new Array();
+    var error_la  = new Array();
+
+    ADL.ast = null;
+
+    try {
+      if( ( error_cnt = __##PREFIX##parse( src, error_off, error_la ) ) > 0 ) {
+        var i;
+        var errors = "";
+        for( i = 0; i < error_cnt; i++ ) {
+          errors += "Parse error: " + src.substr( error_off[i], 30 ) + 
+          ". Expecting \"" + error_la[i].join() + "\n";
+        }
+        this.errors = errors;
+        return null;
+      }
+    } catch(e) {
+      this.errors = "Semantic error: " + e;
+      return null;
+    }
+    this.errors = "";
+    return ADL.ast;
+  }
+});
+
+function makeList() {
+  var ar = new Array();
+  if( arguments ) {
+    for( var v=0; v<arguments.length; v++ ) {
+      if( !Object.isUndefined(arguments[v]) && arguments[v].isArray() ) {
+        for( var vv=0; vv<arguments[v].length; vv++ ) {
+          if( arguments[v][vv] ) { 
+            ar.push(arguments[v][vv]); 
+          }
+        }
+      } else {
+        if( arguments[v] ) { ar.push(arguments[v]); }
+      }
+    }
+  }
+
+  return ar;
+}
+
+*]
+
+!	' |\t|\n|\r|//[^\n]*\n|/\*([^\*]|[\r\n]|(\*+([^\*/]|[\r\n])))*\*+/'
+
+	'true|false'			 Boolean
+        [* %match = new ADL.Boolean( %match ); *]
+	'[\+\-]?(0|[1-9][0-9]*)'	 Integer
+        [* %match = new ADL.Integer( %match ); *]
+	'"([^"])*"'			 String	
+        [* %match = new ADL.String( %match.substr( 1, %match.length - 2 ) ); *]
+	'\[@([^\]])*\]'			 Annotation	
+        [* %match = new ADL.Annotation(%match.substr(2, %match.length - 3)); *]
+        '\('
+        '\)'
+	'{'
+	'}'
+	'\['
+	'\]'
+	';'
+	':'
+	'::'
+        '\.'
+        ','
+
+	'\+'
+	'\-'
+	'='
+	'!='
+	'<='
+        '\*'
+        '/'
+	'\|'
+	'\.\.'
+	'<'
+	'>'
+
+	'#include'			     IncludeDirective
+
+  '[a-zA-Z_][a-zA-Z0-9_\.\-]*'         Identifier;
+
+##
+
+Program: Statements [* ADL.ast = new ADL.AST(%1); *];
+
+Statements: Statements Statement  [* %% = makeList( %1, %2 ); *]
+          |;
+				
+Statement: Construct
+	 | Directive;
+				
+Construct: Annotations Modifiers Type Name Supers Modifiers Value Children
+    [* %% = new ADL.Construct( %3, %4, %7, %1, %5, makeList( %2, %6), %8 ); *];
+
+Directive: IncludeDirective String
+    [* %% = ADL.include( %2 ); *];
+
+Annotations: Annotations Annotation [* %% = makeList( %1, %2 ); *]
+           |;
+
+Generic: '<' GenericArguments '>' [*
+  if( %2 ) {
+    %% = %1 + %2.join(",") + %3 
+  } else {
+    throw( "Missing GenericArguments" );
+  }
+*];
+
+GenericArgument: Identifier;
+
+GenericArguments: GenericArguments ',' GenericArgument 
+                    [* %% = makeList( %1, %3 ) *] 
+                | GenericArgument 
+                    [* %% = makeList( %1 ) *]
+                |; 
+
+Name: Identifier | Identifier Generic [* %% = %1+%2 *];
+
+Type: Identifier | Identifier Generic [* %% = %1+%2 *];
+
+Supers: Supers Super [* %% = makeList( %1, %2 ); *]
+      |;
+
+Super: ':' Type Multiplicity [* %% = new ADL.Reference( %2, %3 ); *];
+
+Multiplicity: '[' Integer ']'         [* %% = new ADL.Multiplicity( %2 );  *]
+       | '[' Integer '..' Integer ']' [* %% = new ADL.Multiplicity( %2, %4 ); *]
+       |;
+
+Modifiers: Modifiers Modifier [* %% = makeList( %1, %2 ); *]
+         |;
+
+Modifier: '+' Identifier              [* %% = new ADL.Modifier( %2 );     *]
+        | '+' Identifier '=' Constant [* %% = new ADL.Modifier( %2, %4 ); *];
+
+Value: '<=' Constant [* %% = new ADL.Value( %2 ); *] 
+     |;
+
+Constant: String | Integer | Boolean;
+
+Children: '{' Statements '}' [* %% = %2;   *]
+        | ';'                [* %% = null; *];

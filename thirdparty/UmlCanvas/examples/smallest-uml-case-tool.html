@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="examples.css" />
+    <link rel="stylesheet" type="text/css" href="../build/UmlCanvas.css" />
+    <script type="text/javascript" src="includes.js"></script>
+
+    <style type="text/css">
+      .UmlCanvas { border: 1px solid #999; }
+    </style>
+  </head>
+  
+  <body>
+
+    <h1>Smallest UML CASE Tool</h1>
+    
+    <p>
+      This example shows how you can create a UML CASE tool using the 
+      UmlCanvas API, by enabling the Inspector by default.
+    </p>
+
+    <canvas class="UmlCanvas" width="300" height="300"></canvas>
+
+    <script>
+      UmlCanvas.on( "ready", function() {
+        var model = UmlCanvas.getModel();
+        with( model.getPlugin("inspector") ) {
+          moveTo( model.getLeft() + model.getWidth() + 20, model.getTop() );
+          resizeTo( model.getWidth(), model.getHeight() );
+          show();
+        }
+      });
+    </script>
+  </body>
+</html>

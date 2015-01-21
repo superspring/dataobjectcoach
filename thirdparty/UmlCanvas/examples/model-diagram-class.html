@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="examples.css" />
+    <link rel="stylesheet" type="text/css" href="../build/UmlCanvas.css" />
+    <script type="text/javascript" src="includes.js"></script>
+  </head>
+  
+  <body onload="drawIt();">
+
+    <h1>Model / Diagram / Class</h1>
+    <p>
+      This example shows the usage of the UmlCanvas API to turn a Canvas 
+      element into a UmlCanvas, create a Model, add a Diagram and create a
+      Class with Attributes and Operations.
+    </p>
+
+    <canvas id="myModel" width="400" height="250"></canvas>
+    
+    <script>
+    function drawIt() {
+        var manager = new UmlCanvas.Manager();
+        var model = manager.setupModel("myModel");
+		model.makeTabbed( ["console","source","about"] );
+	  	var diagram = model.addDiagram();
+        diagram.makeDynamic();
+        
+		var class1 = new UmlCanvas.Class( { name: "TestClass", 
+                                            stereotype: "entity",
+                                            abstract: true } );
+		with( class1  ) {
+		    addAttribute( { name: "Attribute1", visibility: "public", 
+				    type: "Integer", isStatic: true } );
+		    addAttribute( { name: "Attribute2", visibility: "private", 
+				    type: "String" } );
+		    addAttribute( { name: "Attribute3", visibility: "protected", 
+				    type: "Boolean" } );
+		    addOperation( { name: "Operation1", visibility: "public", 
+				    returnType: "Integer", isStatic: true,
+				    arguments: [{ name: "arg1", type: "Integer[20]"  },
+						{ name: "arg2", type: "String[1..2]" }]
+				  } );
+		    addOperation( { name: "Operation2", visibility: "protected", 
+				    returnType: "Boolean",
+				    arguments: [{ name: "arg1", type: "Object"    },
+						{ name: "arg2", type: "Something" }]
+				  } );
+		}
+
+	   	diagram.at(50,50).put(class1);
+
+        manager.startAll();
+    }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="css/text" href="examples.css" />
+
+    <script type="text/javascript" src="../include.js"></script>
+  </head>
+  <body>
+    <h1>Arrays</h1>
+    <div class="box">
+      <h2>Checking an Array HAS an element</h2>
+      <script>
+	var myArray = [ 10, 20, 30, "apple", "ibm" ];
+	document.writeln( myArray.has( "apple" ) );
+	document.writeln( myArray.has( "microsoft" ) );
+      </script>
+    </div>
+    <div class="box">
+      <h2>Iterating over an Array</h2>
+      <script>
+	myArray.iterate( function(item) {
+	  document.writeln( item );
+	});
+      </script>
+    </div>
+    <div class="box">
+      <h2>Removing an item from an Array</h2>
+      <script>
+	document.writeln( [ 1, 2, 3, 4, 5 ].remove(2, 4) );
+      </script>
+    </div>
+    <div class="box">
+      <h2>DeepCopy an Array</h2>
+      <script>
+	var x = [ 1, 2, 3, 4, 5 ];
+	var y = x;
+	var z = x.dup();
+	document.writeln( x ); document.writeln( "<br>" );
+	document.writeln( y ); document.writeln( "<br>" );
+	document.writeln( z ); document.writeln( "<br>" );
+	x.remove( 2, 4 );
+	document.writeln( x ); document.writeln( "<br>" );
+	document.writeln( y ); document.writeln( "<br>" );
+	document.writeln( z ); document.writeln( "<br>" );
+      </script>
+    </div>
+  </body>
+</html>

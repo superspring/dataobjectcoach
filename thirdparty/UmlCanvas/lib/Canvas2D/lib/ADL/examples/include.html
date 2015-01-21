@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <script src="../include.js"></script>
+    <script>
+
+function process(src) {
+  var tree = new ADL.Parser().parse(src);
+  document.getElementById("dump").value = tree.getRoot().toString(); 
+}
+
+    </script>
+  </head>
+  <body>
+    <h1>#include Example</h1>
+    <h2>Input</h2>
+    <textarea id="src" name="src" cols="80" rows="7">
+#include "myshapes"
+MyConstructType myName : myType +modifier1="abc" +modifier2 {
+    MyConstructType myOtherName : myOtherType;
+}
+SomethingElse aName : aType;
+    </textarea>
+
+    <h2>toString</h2>
+    <textarea id="dump" name="console" cols="80" rows="10"></textarea>    
+    <br/>
+    <input type="button" value="process"
+	   onclick="process(document.getElementById('src').value);">
+  </body>
+</html>

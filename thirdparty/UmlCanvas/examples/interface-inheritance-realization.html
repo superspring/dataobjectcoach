@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="examples.css" />
+    <link rel="stylesheet" type="text/css" href="../build/UmlCanvas.css" />
+    <script type="text/javascript" src="includes.js"></script>
+  </head>
+  
+  <body onload="drawIt();">
+
+    <h1>Interface / Inheritance / Realization</h1>
+    
+    <p>
+      This example shows how to create Interfaces and how to apply inheritance
+      and realizations using the UmlCanvas API.
+    </p>
+    
+    <canvas id="myModel" width="400" height="250"></canvas>
+    
+    <script>
+      function makeClass(name) {
+        var clazz = new UmlCanvas.Class( { name: name } );
+        with( clazz  ) {
+          addAttribute( { name: "Attribute", visibility: "public", 
+                          type: "Int" } );
+	  addOperation( { name: "Operation", visibility: "public", 
+                          returnType: "Int" } );
+	}
+        return clazz;
+      }
+
+      function drawIt() {
+        var interface1 = new UmlCanvas.Interface( { name: "interface1" } );
+        interface1.addOperation( { name: "Operation", returnType: "Int" } );
+
+        var class2 = makeClass( "Class2" );
+        var class3 = makeClass( "Class3" );
+        var class4 = makeClass( "Class4" );
+
+        var manager = new UmlCanvas.Manager();
+
+        with( manager.setupModel("myModel") ) {
+          makeTabbed( ["console","source","about"] );
+	  with( addDiagram() ) {
+	    at( 25, 25).put(interface1);
+	    at(250, 25).put(class2);
+	    at( 25,150).put(class3);
+	    at(250,150).put(class4);
+
+            put( new UmlCanvas.Realization( { from: interface1, to: class3 } ));
+
+            put( new UmlCanvas.Inheritance( { from: class2, to: class4 } ));
+
+            makeDynamic();
+	  }
+        }
+
+        manager.startAll();
+      }
+    </script>
+  </body>
+</html>

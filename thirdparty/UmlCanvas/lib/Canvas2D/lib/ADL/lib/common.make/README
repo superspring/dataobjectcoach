@@ -1,0 +1,13 @@
+common.make
+by Christophe VG <contact@christophe.vg>
+Copyright 2010-2011, Christophe VG
+
+---
+
+common.make is a Makefile and related build infrastructure, common to many of
+my Javascript-based projects. It provides building of a set of source files
+into a single Javascript file, compression, code style checking and unit 
+testing.
+
+Projects depending on it, only need to configure some variables to benefit 
+from common.make.

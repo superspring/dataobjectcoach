@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="examples.css" />
+    <link rel="stylesheet" type="text/css" href="../build/UmlCanvas.css" />
+    <script type="text/javascript" src="includes.js"></script>
+  </head>
+  
+  <body>
+    
+    <h1>DSL</h1>
+
+    <p>
+      This examples shows how to create a diagram using the UmlCanvas DSL.
+    </p>
+
+    <canvas class="UmlCanvas Tabbed withSource withConsole withAbout" 
+        	      id="myTabbedDiagram" width="800" height="400"></canvas>
+
+    <pre id="myTabbedDiagramSource" style="display:none;">  
+Diagram myDiagram +dynamic {
+  [@22,19]
+  interface Interface1 +stereotype="base" {
+    +protected operation op1 : Int;
+  }
+
+  [@37,150]
+  class SubClass1 : Interface1 +stereotype="sub" {
+     +private attribute attr1 : String;
+     +protected operation op1 : Int {
+      parameter param1 : String;
+    }
+  }
+
+  [@329,19]
+  class BaseClass1 +abstract {
+    +protected +abstract operation op1 : Int;
+  }
+  
+  [@470, 250]
+  note BaseClass1Note 
+    +text="This is BaseClass1.\nIt has a reference to Interface1,\nwhich executes the op1 method for BaseClass1."
+    +linkedTo="BaseClass1,Interface1";
+
+  [@320,150]
+  class SubClass2 : BaseClass1 {
+    +private attribute attr1 : String;
+    +protected operation op1 : Int {
+      parameter param1 : String;
+    }
+  }
+
+  [@vertical]
+  association myInterface1s {
+    +composite role baseclass : BaseClass1;
+    +navigable role interface : Interface1;
+  }
+
+  [@vertical]
+  dependency mySubClasses1 {
+    client subclass : SubClass2;
+    supplier othersubclass : SubClass1;
+  }
+}
+    </pre>  
+  </body>
+</html>

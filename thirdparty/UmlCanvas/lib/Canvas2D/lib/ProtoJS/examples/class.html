@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="css/text" href="examples.css" />
+
+    <script type="text/javascript" src="../include.js"></script>
+  </head>
+  <body>
+    <h1>Class Based Inheritance Support</h1>
+
+    <div class="box">
+      <h2>Creating a New Class</h2>
+      <script>
+      var Shape = Class.extend( {
+        init: function() {
+          document.writeln( "shape::init<br/>" );
+        },
+        aMethod: function() {
+          document.writeln( "shape::aMethod<br/>" );
+        }
+      });
+      new Shape().aMethod();
+      </script>
+      
+    </div>
+
+    <div class="box">
+      <h2>Extending a Class</h2>
+
+      <script>
+	var Rectangle = Shape.extend( {
+	  init: function() {
+	    document.writeln( "Rectangle::init<br>" );
+	    this._super();
+	  },
+	  aMethod: function() {
+	    document.writeln( "Rectangle::aMethod<br>" );
+	    this._super();
+	  }
+	});
+	new Rectangle().aMethod();
+      </script>
+
+    </div>
+
+    <div class="box">
+      <h2>Extending an Extended Class</h2>
+      <script>
+	var Text = Rectangle.extend( {
+	  init: function() {
+	    document.writeln( "Text::init<br>" );
+	    this._super();
+	  },
+	  aMethod: function() {
+	    document.writeln( "Text::aMethod<br>" );
+	    this._super();
+	  }
+	});
+	new Text().aMethod();
+      </script>
+    </div>
+  </body>
+</html>

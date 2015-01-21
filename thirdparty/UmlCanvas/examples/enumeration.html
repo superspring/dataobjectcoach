@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="examples.css" />
+    <link rel="stylesheet" type="text/css" href="../build/UmlCanvas.css" />
+    <script type="text/javascript" src="includes.js"></script>
+  </head>
+  
+  <body>
+    
+    <h1>Enumerations</h1>
+
+    <p>
+      This example shows how to create an Enumeration using the UmlCanvas DSL.
+    </p>
+
+    <canvas class="UmlCanvas Tabbed withSource withConsole withAbout" 
+	             id="myTabbedDiagram" width="300" height="250"></canvas>
+
+    <pre id="myTabbedDiagramSource" style="display:none;">  
+Diagram myDiagram +dynamic {
+  [@37,18]
+  enumeration anEnumeration +abstract;
+  [@184,19]
+  interface anInterface;
+  [@100,100]
+  enumeration myEnum : anInterface : anEnumeration +abstract {
+    Literal value1;
+    Literal value2;
+    Literal value3;
+  }
+}
+    </pre>  
+  </body>
+</html>

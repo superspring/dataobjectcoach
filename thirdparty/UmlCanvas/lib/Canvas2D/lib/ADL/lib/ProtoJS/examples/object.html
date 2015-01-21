@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="css/text" href="examples.css" />
+
+    <script type="text/javascript" src="../include.js"></script>
+  </head>
+  <body>
+    <h1>Object extensions</h1>
+    <div class="box">
+      <h2>Various Type Checks</h2>
+      <script>
+	document.writeln( [ 1, 2, 3 ].isArray() );
+	document.writeln( $H({ 1:1, 2:2, 3:3 }).isHash() );
+	document.writeln( function() { }.isFunction() );
+	document.writeln( "blah".isString() );
+	document.writeln( (123).isNumber() );
+
+	var u; document.writeln( Object.isUndefined(u) );
+	
+	var c = Class.extend( { init: function() { } } );
+	var o = new c();
+	document.writeln( o.isArray() === false );
+      </script>
+    </div>
+  </body>
+</html>

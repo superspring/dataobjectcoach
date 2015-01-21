@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="examples.css" />
+    <link rel="stylesheet" type="text/css" href="../build/UmlCanvas.css" />
+    <script type="text/javascript" src="includes.js"></script>
+  </head>
+  
+  <body>
+    
+    <h1>Security</h1>
+
+    <p>
+      A small diagram, showing how to create different styles of associations
+      using the UmlCanvas DSL.
+    </p>
+
+    <canvas class="UmlCanvas Tabbed withSource withConsole withAbout" 
+	             id="myTabbedDiagram" width="300" height="300"></canvas>
+
+    <pre id="myTabbedDiagramSource" style="display:none;">  
+Diagram myDiagram +dynamic {  
+  [@15,24] 
+  class Group {
+    attribute name : String +private;
+  }
+
+  [@145,15] 
+  class User {
+    attribute name : String +private;
+    operation hasRole : Boolean +public {
+      parameter role : Role;
+    }
+  }
+  
+  [@150,120] 
+  class Role {
+    attribute name : String +private;
+  }
+  
+  [@150,215] 
+  class Permission {
+    attribute name : String +private;
+  }
+
+  [@vertical]
+  association permissionsOfRole {
+    role role : Role +shared;
+    role permissions : Permission +navigable;
+  }
+  
+  [@vertical]
+  association usersOfGroup {
+    role group : Group +shared;
+    role users : User +navigable;
+  }
+
+  [@vertical]
+  association rolesOfUser {
+    role user : User;
+    role roles : Role +navigable;
+  }
+}
+    </pre>  
+  </body>
+</html>

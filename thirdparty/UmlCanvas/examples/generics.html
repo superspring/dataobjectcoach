@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="examples.css" />
+    <link rel="stylesheet" type="text/css" href="../build/UmlCanvas.css" />
+    <script type="text/javascript" src="includes.js"></script>
+  </head>
+  
+  <body>
+    
+    <h1>Generics</h1>
+
+    <p>
+      This example shows how to use "Generics" using the UmlCanvas DSL.
+    </p>
+
+    <canvas class="UmlCanvas Tabbed withSource withConsole withAbout" 
+               id="myTabbedDiagram" width="400" height="350"></canvas>
+    
+    <pre id="myTabbedDiagramSource" style="display:none;">
+Diagram myDiagram +dynamic {
+  [@45,34]
+  interface myInterface&lt;T> {
+    operation doSomething : T;
+  }
+
+  [@37,150]
+  class Class1 : myInterface&lt;Date> {
+     operation doSomething : Date;
+  }
+
+  [@200,34]
+  class Class2 {
+    attribute impl : myInterface&lt;Date>;
+  }
+
+  Dependency myImpl {
+    client myClass : Class2;
+    supplier myIf: myInterface;
+  }
+}
+    </pre>  
+  </body>
+</html>

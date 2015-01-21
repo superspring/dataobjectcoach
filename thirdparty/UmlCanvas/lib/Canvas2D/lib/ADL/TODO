@@ -1,0 +1,2 @@
+- modifiers class to better handle interaction with modifiers
+  now : modifier.value.value isn't nice

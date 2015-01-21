@@ -1,0 +1,32 @@
+ProtoJS
+by Christophe VG <xtof@protojs.org>
+Copyright 2009-2011, Christophe VG
+
+---
+
+ProtoJS is a set of JavaScript language extensions focusing on the
+language itself, rather than trying to overcome browser issues. It's
+aim is to increase development productivity, with a minimal overhead
+(read: size).
+
+To experience ProtoJS, just point your browser to the examples directory and
+take a look around.
+
+Documentation can soon be found @ https://github.com/christophevg/ProtoJS/wiki
+
+If you want to submit an issue, please consult the guidelines @
+https://github.com/christophevg/ProtoJS/wiki/Submitting-Issues
+
+If you are running a system that has `make` support you can also run our 
+automated test suite:
+
+In a nutshell:
+$ make
+$ make test
+...
+-----------------------
+98 tests run.
+0 failed.
+
+REMARK: Sometimes one test fails. It has to do with timing and I have
+to fine-tune it. Just run the tests again and it will mostly be gone.

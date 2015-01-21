@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="css/text" href="examples.css" />
+
+    <script type="text/javascript" src="../include.js"></script>
+  </head>
+  <body>
+    <h1>Event</h1>
+    <div class="box">
+      <h2>Observing events</h2>
+      <div id="log"></div>
+      <script>
+	function add( value ) {
+	  document.getElementById( "log" ).innerHTML = 
+	    document.getElementById( "log" ).innerHTML + "<br>" + value;
+	}
+	ProtoJS.Event.observe( window, "load", function() { add( "1" ); } );
+	ProtoJS.Event.observe( window, "load", function() { add( "2" ); } );
+      </script>
+    </div>
+  </body>
+</html>
