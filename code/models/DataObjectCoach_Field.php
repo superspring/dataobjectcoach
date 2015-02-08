@@ -6,6 +6,7 @@
  */
 
 class DataObjectCoach_Field extends DataObject {
+
 	private static $db = array(
 		'Relation'       => 'Text',
 		'Type'           => 'Text',
@@ -20,6 +21,7 @@ class DataObjectCoach_Field extends DataObject {
 		'ExtraFieldName' => 'Text',
 		'ExtraFieldType' => 'Text',
 		'FieldType'      => 'Text',
+		'SummaryField'   => 'Text',
 	);
 
 	private static $has_one = array(
@@ -56,7 +58,7 @@ class DataObjectCoach_Field extends DataObject {
 
 		// Define the 'Relation'.
 		$field = new DropdownField('Relation', 'What sort of field is this?', array(
-			'db'        => 'db - A single defined value',
+			'db'	=> 'db - A single defined value',
 			'has_one'   => 'has_one - A 1-to-1 relationship with another dataobject',
 			'has_many'  => 'has_many - A 1-to-many relationship with another dataobject',
 			'many_many' => 'many_many - A many-to-many relationship with another dataobject',
@@ -77,14 +79,11 @@ class DataObjectCoach_Field extends DataObject {
 		}
 
 		// For the 'db' relation.
-		$fields->removeByName('Type');
-		$fields->removeByName('RawArgs');
-		$fields->removeByName('ValidEmpty');
-		$fields->removeByName('ValidUnique');
-		$fields->removeByName('RawDefault');
-		$fields->removeByName('IndexType');
-		$fields->removeByName('ExtraFieldName');
-		$fields->removeByName('ExtraFieldType');
+		foreach (array(
+			'Type', 'RawArgs', 'ValidEmpty', 'ValidUnique', 'RawDefault', 'IndexType', 'ExtraFieldName', 'ExtraFieldType',
+		) as $fieldname) {
+			$fields->removeByName($fieldname);
+		}
 		if ($this->Relation == 'db') {
 			// Define the 'Type'.
 			$field = new DropdownField('Type', 'Type of field?', array_combine(self::$db_types, self::$db_types));
@@ -135,11 +134,16 @@ class DataObjectCoach_Field extends DataObject {
 
 			// Should this field be indexed?
 			$field = new DropdownField('IndexType', 'Index this field?', array(
-				''         => 'No index',
+				''	 => 'No index',
 				'index'    => 'A standard index',
 				'fulltext' => 'Fulltext index',
 				'unique'   => 'Unique index',
 			));
+			$fields->addFieldToTab('Root.Main', $field);
+
+			// Is this a summary field? (Show in tables)
+			$field = new TextField('SummaryField', 'Summary Field name');
+			$field->setDescription("Is this a summary field? Enter it's column name here (ignored if empty)");
 			$fields->addFieldToTab('Root.Main', $field);
 		}
 		elseif ($this->Relation == 'many_many') {
@@ -149,7 +153,7 @@ class DataObjectCoach_Field extends DataObject {
 			$fields->addFieldToTab('Root.Main', $field);
 
 			// Add the extra field's type.
-			$field = new TextField('ExtraFieldType', 'Extra field name');
+			$field = new TextField('ExtraFieldType', 'Extra field type');
 			$field->setDescription('The type of the linking field on this relationship (empty for none)');
 			$fields->addFieldToTab('Root.Main', $field);
 		}
@@ -173,30 +177,33 @@ class DataObjectCoach_Field extends DataObject {
 	 * Is this a valid field?
 	 */
 	protected function validator() {
-		// Prepare variables.
-		$result = parent::validator();
 
-		// @todo
-		// 1. RawName must be unique and non-empty.
-		// 2. Must be a valid Database table name.
-		// 3. Must have an argument for Enum, HTMLVarchar, Varchar which is single line list of at least one or integer less than database limit.
-
-		// Done.
-		return $result;
+		return new DataObjectCoach_FieldValidator();
 	}
 
 	/**
 	 * Before the object is written, check if it's valid or not.
 	 */
-	public function onBeforeWrite() {
+	protected function onBeforeWrite() {
+
 		// Let the other code run first.
 		parent::onBeforeWrite();
 
-		// @todo
-		// 1. If this is linked to another class, does that class exist?
-		// 2. The field args are valid for it's type.
-
 		$this->Enabled = TRUE;
+	}
+
+	/**
+	 * After the field is written, write the parent again so the validators are run.
+	 */
+	protected function onAfterWrite() {
+
+		// Let the other code run first.
+		parent::onAfterWrite();
+
+		// Re-save the parent.
+		if ($this->ContainerID) {
+			$this->Container()->write();
+		}
 	}
 
 	/**

@@ -78,25 +78,15 @@ class DataObjectCoach_Container extends DataObject {
 	/**
 	 * Is this valid to create a dataobject?
 	 */
-	protected function validator() {
-		// Prepare varaibles.
-		$result = parent::validator();
-
-		// @todo
-		// 1. Raw class name must be unique and non-empty.
-		// 2. Name must be unique and non-empty.
-		// 3. Raw class name must be a valid PHP class name.
-		// 4. RawParent cannot be filled if the class already exists with a different parent.
-		// 5. RawParent must eventually be a DataObject.
-
-		// Done.
-		return $result;
+	public function getCMSValidator() {
+		return new DataObjectCoach_ContainerValidator();
 	}
 
 	/**
 	 * Before the object is written, check if it's valid or not.
 	 */
 	protected function onBeforeWrite() {
+
 		// Let the other code run first.
 		parent::onBeforeWrite();
 

@@ -43,6 +43,7 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 		catch (Exception $ex) {
 			// Problem building these classes? Stop here then.
 			restore_error_handler();
+			// Don't tell the user, as we may be doing a dev/build.
 			return;
 		}
 
@@ -99,14 +100,24 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 	 * Create a Virtual DataObject.
 	 */
 	protected function createClass($name, $parent) {
+
 		// Using eval *shudder* create a new DataObject.
 		$codetemplate = file_get_contents(self::DUMMYCLASS_FILE);
+
+		// First ensure the class names are valid (contain no code, etc).
+		if (!preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $name) ||
+		    !preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $parent)) {
+
+			// One of the classes is bad? Don't run it!
+			throw new Exception('Unable to validate classname - ' . $name);
+		}
 
 		// Create the code.
 		$code = sprintf($codetemplate, $name, $parent);
 
 		// Create the class.
 		eval($code);
+		// Please forgive me for this command.
 
 		// Add a dataextension to it.
 		$name::add_extension('DataObjectCoach_CMSUpdate');
@@ -143,12 +154,42 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 
 		// For each class, add it's fields.
 		foreach ($this->getVirtualClasses() as $class) {
+
+			// Prepare a summary field list.
+			$summary = array();
+			$defaults = $config->get($class->RawClassName, 'defaults') || array();
+			$index = $config->get($class->RawClassName, 'indexes') || array();
+
+			// Add all the individual fields.
 			foreach ($class->Fields()->filter('Enabled', TRUE) as $field) {
 				$this->createField($config, $class->RawClassName, $field);
+
+				if ($field->SummaryField) {
+					$summary[$field->RawName] = $field->SummaryField;
+				}
+				if ($field->RawDefault) {
+					$defaults[$field->RawName] = $field->RawDefault;
+				}
+				if ($field->IndexType) {
+					$index[$field->RawName] = $field->IndexType;
+				}
 			}
+
+			// Set it's name.
+			$config->update($class->RawClassName, 'singular_name', $class->Name);
 
 			// Set it's description.
 			$config->update($class->RawClassName, 'description', $class->Description);
+
+			// Does it have a summary field?
+			$config->update($class->RawClassName, 'summary_fields', array_keys($summary));
+			$config->update($class->RawClassName, 'field_labels', array_values($summary));
+
+			// Does it have a default?
+			$config->update($class->RawClassName, 'defaults', $defaults);
+
+			// What index is it using?
+			$config->update($class->RawClassName, 'indexes', $index);
 		}
 
 		// For each class, add it to the managed models.
