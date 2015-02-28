@@ -80,7 +80,7 @@ class DataObjectCoach_Field extends DataObject {
 
 		// For the 'db' relation.
 		foreach (array(
-			'Type', 'RawArgs', 'ValidEmpty', 'ValidUnique', 'RawDefault', 'IndexType', 'ExtraFieldName', 'ExtraFieldType',
+			'Type', 'RawArgs', 'ValidEmpty', 'ValidUnique', 'RawDefault', 'IndexType', 'ExtraFieldName', 'ExtraFieldType', 'SummaryField',
 		) as $fieldname) {
 			$fields->removeByName($fieldname);
 		}
@@ -163,11 +163,9 @@ class DataObjectCoach_Field extends DataObject {
 
 		// Choose a field to edit the form.
 		$fields->removeByName('FieldType');
-		if ($this->Relation == 'db') {
-			$availablefields = $this->getFormFields();
-			$field = new DropdownField('FieldType', 'What type of field to use?', $availablefields);
-			$fields->addFieldToTab('Root.Main', $field);
-		}
+		$availablefields = $this->getFormFields();
+		$field = new DropdownField('FieldType', 'What type of field to use?', $availablefields);
+		$fields->addFieldToTab('Root.Main', $field);
 
 		// Done.
 		return $fields;
@@ -240,5 +238,63 @@ class DataObjectCoach_Field extends DataObject {
 	 */
 	public function getEnumValues() {
 		return array_map('trim', explode("\n", $this->RawArgs));
+	}
+
+	/**
+	 * Renders this field as it would appear inside a code file.
+	 */
+	public function toCode() {
+
+		// 'abc' => 'Text',
+		if ($this->Relation == 'db') {
+			$type = $this->Type;
+		}
+		else {
+			$type = $this->RawClassName;
+		}
+		if ($this->RawArgs) {
+			// Add the optional arguments.
+			$type .= '(' . $this->RawArgs . ')';
+		}
+
+		// Done.
+		return $this->quoteString($this->RawName) . ' => ' . $this->quoteString($type);
+	}
+
+	/**
+	 * Returns a quoted string.
+	 */
+	protected function quoteString($str) {
+
+		// Does it contain a '?
+		if (strpos($str, "'") === false) {
+			return "'$str'";
+		}
+
+		// Special chars
+		foreach (array(
+			"\\", "$",
+		) as $char) {
+			if (strpos($str, $char) !== false) {
+				// There is a special char? Don't double quote.
+				return "'" . str_replace("$", "\\$", addslashes($str)) . "'";
+			}
+		}
+
+		// No special chars? Just a '?
+		return '"' . $str . '"';
+	}
+
+	/**
+	 * Returns a unique name for the index.
+	 *
+	 * This is based on it's components.
+	 */
+	public function getIndexName() {
+
+		// Create it.
+		return sprintf(
+			'DOC_%s_%s_idx', $this->RawName, $this->IndexType
+		);
 	}
 }

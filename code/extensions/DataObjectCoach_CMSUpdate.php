@@ -6,7 +6,9 @@
  */
 
 class DataObjectCoach_CMSUpdate extends DataExtension {
+
 	public function updateCMSFields(FieldList $cmsfields) {
+
 		// Which class does this belong to?
 		$class     = get_class($this->owner);
 		$container = DataObjectCoach_Container::get()->filter('RawClassName', $class)->first();
@@ -28,7 +30,7 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 				'DropdownField',
 			))) {
 				$list = $field->getEnumValues();
-				$field = new $type($name, $name, $list);
+				$field = new $type($name, $name, array_combine($list, $list));
 			}
 			else {
 				$field = new $type($name, $name);
@@ -38,6 +40,7 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 			$cmsfields->addFieldToTab('Root.Main', $field);
 		}
 
+		// Done.
 		return $fields;
 	}
 }

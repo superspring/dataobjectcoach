@@ -157,8 +157,8 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 
 			// Prepare a summary field list.
 			$summary = array();
-			$defaults = $config->get($class->RawClassName, 'defaults') || array();
-			$index = $config->get($class->RawClassName, 'indexes') || array();
+			$defaults = $config->get($class->RawClassName, 'defaults') ?: array();
+			$index = $config->get($class->RawClassName, 'indexes') ?: array();
 
 			// Add all the individual fields.
 			foreach ($class->Fields()->filter('Enabled', TRUE) as $field) {
@@ -171,7 +171,13 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 					$defaults[$field->RawName] = $field->RawDefault;
 				}
 				if ($field->IndexType) {
-					$index[$field->RawName] = $field->IndexType;
+
+					// Uniquely name the index.
+					// @todo - security flaw - escape these characters.
+					$index[$field->getIndexName()] = array(
+						'type' => $field->IndexType,
+						'value' => '"' . $field->RawName . '"',
+					);
 				}
 			}
 
@@ -276,6 +282,22 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 
 		// Update configuration.
 		$config->update($name, 'has_one', $hasone);
+	}
+
+	/**
+	 * Generic config for a has_many field.
+	 */
+	protected function createHasManyField($config, $name, $field) {
+		// Prepare variables.
+		$hasmany = $config->get($name, 'has_many');
+		$fieldname  = $field->RawName;
+		$fieldclass = $field->RawClassName;
+
+		// Add it to the list, or update.
+		$hasmany[$fieldname] = $fieldclass;
+
+		// Update configuration.
+		$config->update($name, 'has_many', $hasmany);
 	}
 
 	/**
