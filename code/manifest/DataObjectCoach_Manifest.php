@@ -262,7 +262,9 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 		}
 
 		// Add it to the list, or update.
-		$db[$fieldname] = $rawvalue;
+		if ($fieldname && $rawvalue) {
+			$db[$fieldname] = $rawvalue;
+		}
 
 		// Update configuration.
 		$config->update($name, 'db', $db);
@@ -278,7 +280,9 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 		$fieldclass = $field->RawClassName;
 
 		// Add it to the list, or update.
-		$hasone[$fieldname] = $fieldclass;
+		if ($fieldname && $fieldclass) {
+			$hasone[$fieldname] = $fieldclass;
+		}
 
 		// Update configuration.
 		$config->update($name, 'has_one', $hasone);
@@ -294,7 +298,9 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 		$fieldclass = $field->RawClassName;
 
 		// Add it to the list, or update.
-		$hasmany[$fieldname] = $fieldclass;
+		if ($fieldname && $fieldclass) {
+			$hasmany[$fieldname] = $fieldclass;
+		}
 
 		// Update configuration.
 		$config->update($name, 'has_many', $hasmany);
@@ -313,8 +319,8 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 		$extratype  = $field->ExtraFieldType;
 
 		// Add it to the list, or update.
-		$manymany[$fieldname] = $fieldclass;
-		if ($extraname) {
+		if ($extraname && $extratype) {
+			$manymany[$fieldname] = $fieldclass;
 			$manymanyextra[$extraname] = $extratype;
 		}
 
