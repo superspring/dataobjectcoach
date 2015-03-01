@@ -319,8 +319,10 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 		$extratype  = $field->ExtraFieldType;
 
 		// Add it to the list, or update.
-		if ($extraname && $extratype) {
+		if ($fieldname && $fieldclass) {
 			$manymany[$fieldname] = $fieldclass;
+		}
+		if ($extraname && $extratype) {
 			$manymanyextra[$extraname] = $extratype;
 		}
 
