@@ -11,7 +11,8 @@
 	}],
 	"homepage": "https://github.com/superspring/dataobjectcoach",
 	"require": {
-		"silverstripe/framework": "~3.0"
+		"silverstripe/framework": "~3.0",
+		"undefinedoffset/sortablegridfield": "*"
 	},
 	"target-dir": "dataobjectcoach"
 }

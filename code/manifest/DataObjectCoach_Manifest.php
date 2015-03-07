@@ -117,10 +117,7 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 
 		// Create the class.
 		eval($code);
-		// Please forgive me for this command.
-
-		// Add a dataextension to it.
-		$name::add_extension('DataObjectCoach_CMSUpdate');
+		// Please forgive me.
 	}
 
 	/**
@@ -159,6 +156,7 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 			$summary = array();
 			$defaults = $config->get($class->RawClassName, 'defaults') ?: array();
 			$index = $config->get($class->RawClassName, 'indexes') ?: array();
+			$extensions = $config->get($class->RawClassName, 'extensions') ?: array();
 
 			// Add all the individual fields.
 			foreach ($class->Fields()->filter('Enabled', TRUE) as $field) {
@@ -196,6 +194,10 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 
 			// What index is it using?
 			$config->update($class->RawClassName, 'indexes', $index);
+
+			// Ensure that DataObjectCoach is extending it.
+			$extensions[] = 'DataObjectCoach_CMSUpdate';
+			$config->update($class->RawClassName, 'extensions', $extensions);
 		}
 
 		// For each class, add it to the managed models.

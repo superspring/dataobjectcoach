@@ -11,6 +11,7 @@ class DataObjectCoach_Field extends DataObject {
 		'Relation'       => 'Text',
 		'Type'           => 'Text',
 		'RawName'        => 'Text',
+		'PrettyName'     => 'Text',
 		'RawClassName'   => 'Text',
 		'RawArgs'        => 'Text',
 		'RawDefault'     => 'Text',
@@ -22,10 +23,13 @@ class DataObjectCoach_Field extends DataObject {
 		'ExtraFieldType' => 'Text',
 		'FieldType'      => 'Text',
 		'SummaryField'   => 'Text',
+		'Description'    => 'Text',
+		'Sort'           => 'Int',
 	);
 
 	private static $has_one = array(
 		'Container' => 'DataObjectCoach_Container',
+		'Group'     => 'DataObjectCoach_Group',
 	);
 
 	private static $singular_name = 'Field';
@@ -40,21 +44,63 @@ class DataObjectCoach_Field extends DataObject {
 	);
 
 	private static $summary_fields = array(
-		'Relation', 'Type', 'RawName',
+		'Relation'         => 'Type',
+		'RawName'          => 'Name',
+		'Description'      => 'Description',
+		'Group.PrettyName' => 'Group',
+	);
+
+	private static $default_sort = array(
+		'Sort',
 	);
 
 	/**
 	 * Layout for the fields in this dataobject.
 	 */
 	public function getCMSFields() {
+
 		// Prepare variables.
 		$fields = parent::getCMSFields();
+
+		// Which group is it in?
+		if ($this->Relation) {
+
+			// Clone the existing one, and add in the parents.
+			$inheritgroups = new ArrayList($this->Container()->Groups()->toArray());
+			$class = $this->Container()->RawParent;
+			while ($class) {
+				$container = DataObjectCoach_Container::get()->filter('RawClassName', $class)->first();
+				if ($container) {
+					foreach ($container->Groups() as $group) {
+						$inheritgroups->push($group);
+					}
+					$class = $container->RawParent;
+				}
+				else {
+					break;
+				}
+			}
+
+			// Get a list of the groups.
+			$groups = $this->ContainerID ? $inheritgroups->map('ID', 'PrettyName') : array();
+
+			// Add a key to the beginning.
+			$groups[0] = '<none>';
+			ksort($groups);
+
+			// Add the field.
+			$field = new DropdownField('GroupID', 'Field group', $groups);
+			$field->setDescription('Does this field belong in a group?');
+			$fields->addFieldToTab('Root.Main', $field);
+		}
+		else {
+			$fields->removeByName('GroupID');
+		}
 
 		// Define the 'Name'.
 		$field = new TextField('RawName', 'Field Name');
 		$field->setDescription('What is the machine name for this field?');
-		$fields->removeByName('RawName');
-		$fields->addFieldToTab('Root.Main', $field);
+		$fields->addFieldToTab('Root.Field', $field);
 
 		// Define the 'Relation'.
 		$field = new DropdownField('Relation', 'What sort of field is this?', array(
@@ -65,7 +111,7 @@ class DataObjectCoach_Field extends DataObject {
 		));
 		$field->setDescription('What sort of relationship (if any) does this field have with others? (Save after editing this field)');
 		$fields->removeByName('Relation');
-		$fields->addFieldToTab('Root.Main', $field);
+		$fields->addFieldToTab('Root.Field', $field);
 
 		// For the 'has_one', 'has_many', and 'many_many' relations.
 		$fields->removeByName('RawClassName');
@@ -73,22 +119,35 @@ class DataObjectCoach_Field extends DataObject {
 			'has_one', 'has_many', 'many_many',
 		))) {
 			// Define the 'RawClassName' field.
-			$field = new TextField('RawClassName', 'The ClassName it is linking to');
+			$classlist = ClassInfo::subclassesFor('DataObject');
+			$field = new DropdownField('RawClassName', 'The ClassName it is linking to', $classlist);
 			$field->setDescription('Enter the dataobject name that this field links to');
 			$fields->addFieldToTab('Root.Main', $field);
 		}
 
 		// For the 'db' relation.
 		foreach (array(
-			'Type', 'RawArgs', 'ValidEmpty', 'ValidUnique', 'RawDefault', 'IndexType', 'ExtraFieldName', 'ExtraFieldType', 'SummaryField',
+			'Type', 'RawArgs', 'ValidEmpty', 'ValidUnique', 'RawDefault', 'IndexType', 'Description', 'ContainerID',
+			'ExtraFieldName', 'ExtraFieldType', 'SummaryField', 'FieldType', 'Enabled', 'Sort', 'PrettyName',
 		) as $fieldname) {
 			$fields->removeByName($fieldname);
 		}
+
+		// Is the main field empty?
+		if ($fields->fieldByName('Root.Main')->Fields()->count() == 0) {
+			$fields->removeByName('Main');
+		}
+
 		if ($this->Relation == 'db') {
+
+			$field = new TextField('PrettyName', 'What is the title of this field?');
+			$field->setDescription('Used to display inside the CMS (defaults to using machine name)');
+			$fields->addFieldToTab('Root.CMS', $field);
+
 			// Define the 'Type'.
 			$field = new DropdownField('Type', 'Type of field?', array_combine(self::$db_types, self::$db_types));
 			$field->setDescription('Out of the core Silverstripe types, which sort of field is this? (Save after editing this field)');
-			$fields->addFieldToTab('Root.Main', $field);
+			$fields->addFieldToTab('Root.Field', $field);
 
 			// Enum fields have special args.
 			if ($this->Type == 'Enum') {
@@ -112,7 +171,7 @@ class DataObjectCoach_Field extends DataObject {
 			// Add in the default value.
 			$field = new TextField('RawDefault', 'What is the default value of this field?');
 			$field->setDescription('Unless this field is empty, it is the default value for this field for all new instances');
-			$fields->addFieldToTab('Root.Main', $field);
+			$fields->addFieldToTab('Root.Field', $field);
 
 			// Add some basic validation.
 			foreach (array(
@@ -129,7 +188,7 @@ class DataObjectCoach_Field extends DataObject {
 				$field->setDescription($desc);
 
 				// Add it.
-				$fields->addFieldToTab('Root.Main', $field);
+				$fields->addFieldToTab('Root.Attribute', $field);
 			}
 
 			// Should this field be indexed?
@@ -139,7 +198,7 @@ class DataObjectCoach_Field extends DataObject {
 				'fulltext' => 'Fulltext index',
 				'unique'   => 'Unique index',
 			));
-			$fields->addFieldToTab('Root.Main', $field);
+			$fields->addFieldToTab('Root.Attribute', $field);
 
 			// Is this a summary field? (Show in tables)
 			$field = new TextField('SummaryField', 'Summary Field name');
@@ -158,14 +217,16 @@ class DataObjectCoach_Field extends DataObject {
 			$fields->addFieldToTab('Root.Main', $field);
 		}
 
-		// Remove the enabled field.
-		$fields->removeByName('Enabled');
-
 		// Choose a field to edit the form.
-		$fields->removeByName('FieldType');
-		$availablefields = $this->getFormFields();
-		$field = new DropdownField('FieldType', 'What type of field to use?', $availablefields);
-		$fields->addFieldToTab('Root.Main', $field);
+		if ($this->Relation) {
+			$availablefields = $this->getFormFields();
+			$field = new DropdownField('FieldType', 'What type of field to use?', $availablefields);
+			$fields->addFieldToTab('Root.CMS', $field);
+
+			$description = new TextField('Description', 'Description');
+			$description->setDescription('What goes into this field?');
+			$fields->addFieldToTab('Root.CMS', $description);
+		}
 
 		// Done.
 		return $fields;
