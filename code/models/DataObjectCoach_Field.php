@@ -298,7 +298,7 @@ class DataObjectCoach_Field extends DataObject {
 	 * Get enumerable values list.
 	 */
 	public function getEnumValues() {
-		return array_map('trim', explode("\n", $this->RawArgs));
+		return array_map('trim', preg_split('/[\n\r]+/', $this->RawArgs));
 	}
 
 	/**
@@ -313,7 +313,21 @@ class DataObjectCoach_Field extends DataObject {
 		else {
 			$type = $this->RawClassName;
 		}
-		if ($this->RawArgs) {
+		if ($this->Type == 'Enum') {
+			// An enum field is made up of a comma seperated list of items.
+			$items = $this->getEnumValues();
+			// Escape any commas or quotes.
+			foreach ($items as &$item) {
+				$item = $this->quoteString($item, '', '', array("\\", ',', "'"));
+			}
+			// Create the list of allowed values.
+			$allowed = implode(', ', $items);
+			// What is the default value?
+			$default = $this->quoteString($this->RawDefault, '', '', array("\\", ',', "'"));
+			// Add them to the list.
+			$type .= "('$allowed', '$default')";
+		}
+		elseif ($this->RawArgs) {
 			// Add the optional arguments.
 			$type .= '(' . $this->RawArgs . ')';
 		}
@@ -325,17 +339,15 @@ class DataObjectCoach_Field extends DataObject {
 	/**
 	 * Returns a quoted string.
 	 */
-	protected function quoteString($str) {
+	protected function quoteString($str, $wrapper1 = "'", $wrapper2 = '"', $escape = array("\\", "$")) {
 
 		// Does it contain a '?
-		if (strpos($str, "'") === false) {
-			return "'$str'";
+		if ($wrapper1 && strpos($str, $wrapper1) === false) {
+			return "$wrapper1$str$wrapper1";
 		}
 
 		// Special chars
-		foreach (array(
-			"\\", "$",
-		) as $char) {
+		foreach ($escape as $char) {
 			if (strpos($str, $char) !== false) {
 				// There is a special char? Don't double quote.
 				return "'" . str_replace("$", "\\$", addslashes($str)) . "'";
@@ -343,7 +355,7 @@ class DataObjectCoach_Field extends DataObject {
 		}
 
 		// No special chars? Just a '?
-		return '"' . $str . '"';
+		return "$wrapper2$str$wrapper2";
 	}
 
 	/**

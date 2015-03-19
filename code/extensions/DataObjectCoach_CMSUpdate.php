@@ -55,7 +55,10 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 		}
 
 		// Sometimes there are empty fields, check for them.
-		$this->cleanupFields($cmsfields);
+		$this->cleanupFields($container, $cmsfields);
+
+		// ...and rearrange a few other fields.
+		$this->rearrangeFields($container, $cmsfields);
 
 		// Sort the fields based on the group's order - 'coach' goes last.
 		ksort($groupfields);
@@ -69,28 +72,35 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 				continue;
 			}
 
-			list($parentid, $sort, $id) = explode('-', $key);
-			$group = DataObjectCoach_Group::get()->byID($id);
+			if (strpos($key, '-') === false) {
+				$parentid = $key;
+			}
+			else {
+				list($parentid, $sort, $id) = explode('-', $key);
+			}
 			if ($parentid == 'coach') {
 				$cmsfields->addFieldsToTab('Root.Coach', $fieldgroup);
 			}
-			elseif ($group->Type == 'Tab') {
-				$key = 'Root.' . $group->MachineName;
-				$cmsfields->findOrMakeTab($key, $group->PrettyName);
-				$cmsfields->addFieldsToTab($key, $fieldgroup);
-			}
-			elseif ($group->Type == 'ToggleComposite') {
-				$groupfield = new ToggleCompositeField($group->MachineName, $group->PrettyName, $fieldgroup);
-				$cmsfields->addFieldToTab('Root.Coach', $groupfield);
-			}
-			elseif ($group->Type = 'FieldGroup') {
-				$groupfield = new FieldGroup($group->PrettyName, $fieldgroup);
-				$cmsfields->addFieldToTab('Root.Coach', $groupfield);
+			else {
+				$group = DataObjectCoach_Group::get()->byID($id);
+				if ($group->Type == 'Tab') {
+					$key = 'Root.' . $group->MachineName;
+					$cmsfields->findOrMakeTab($key, $group->PrettyName);
+					$cmsfields->addFieldsToTab($key, $fieldgroup);
+				}
+				elseif ($group->Type == 'ToggleComposite') {
+					$groupfield = new ToggleCompositeField($group->MachineName, $group->PrettyName, $fieldgroup);
+					$cmsfields->addFieldToTab('Root.Coach', $groupfield);
+				}
+				elseif ($group->Type = 'FieldGroup') {
+					$groupfield = new FieldGroup($group->PrettyName, $fieldgroup);
+					$cmsfields->addFieldToTab('Root.Coach', $groupfield);
+				}
 			}
 		}
 
 		// Done.
-		return $fields;
+		return $cmsfields;
 	}
 
 	/**
@@ -215,19 +225,97 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 	}
 
 	/**
+	 * Reorder some of the CMS fields.
+	 */
+	protected function rearrangeFields($container, $cmsfields) {
+
+		// Which fields are being rearranged?
+		$movemes = $container->Move()->filter('Action', 'Reorder');
+
+		// Group these into a list of parents.
+		$parents = array();
+		foreach ($movemes as $moveme) {
+
+			// Which tab are we working in?
+			list($parent, $name) = $moveme->getParts($cmsfields);
+
+			$parents[$parent->getName()][] = array($parent, $name, $moveme->Sort);
+		}
+
+		// Go through each composite set.
+		foreach ($parents as $parentnamelist) {
+
+			// Prepare variables.
+			list($parent, ) = reset($parentnamelist);
+			$names = array();
+			foreach ($parentnamelist as $parentname) {
+				list(, $name, $order) = $parentname;
+				$names[$order] = $parent->fieldByName($name);
+				$parent->removeByName($name);
+			}
+
+			// Preserve the original sort order.
+			ksort($names);
+			// Reset the keys to start from 0.
+			$names = array_values($names);
+
+			// Try and get a direct link to the items.
+			if ($parent instanceof FieldList) {
+				$items = &$parent->toArray();
+			}
+			elseif ($parent instanceof CompositeField) {
+				$items = $parent->getChildren()->toArray();
+			}
+			else {
+				// Oh noes! How did we get here?
+				// Just move along like nothing happend...
+				continue;
+			}
+
+			// Now add it back into it's right place.
+			foreach ($names as $order => $item) {
+				array_splice($items, $order, 0, array($item));
+			}
+
+			// Now force reorder all the items.
+			foreach ($items as $item) {
+				if ($item) {
+					$parent->removeByName($item->getName());
+
+					// ...and add them back in order.
+					$parent->push($item);
+				}
+			}
+		}
+	}
+
+	/**
 	 * Clean up the extra CMS fields.
 	 */
-	protected function cleanupFields($cmsfields) {
+	protected function cleanupFields($container, $cmsfields) {
+
+		// Are we removing any fields?
+		$removemes = $container->Move()->filter('Action', 'Remove');
+		foreach ($removemes as $removeme) {
+
+			// Split this into parent and child.
+			list($parent, $name) = $removeme->getParts($cmsfields);
+
+			// Delete it.
+ 			$parent->removeByName($name);
+		}
 
 		// Go through each tab
 		foreach ($cmsfields->toArray() as $tabset) {
-			foreach ($tabset->Tabs() as $tab) {
+			if (method_exists($tabset, 'Tabs')) {
+				foreach ($tabset->Tabs() as $tab) {
 
-				// ...and if any are empty
-				if ($tab->Fields()->count() == 0) {
+					// ...and if any are empty
+					if ($tab->Fields()->count() == 0) {
 
-					// ...then remove them.
-					$tabset->removeByName($tab->getName());
+						// ...then remove them.
+						$tabset->removeByName($tab->getName());
+					}
 				}
 			}
 		}
@@ -255,9 +343,10 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 					$type = $field->FieldType;
 					$name = $field->RawName;
 					$title = $field->PrettyName ?: $name;
+					$default = $field->RawDefault ?: '';
 
 					// Create the field.
-					$nfield = new $type($name, $title);
+					$nfield = new $type($name, $title, $default);
 					$nfield->setDescription($field->Description);
 
 					// Done.
