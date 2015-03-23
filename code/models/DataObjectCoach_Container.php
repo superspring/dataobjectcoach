@@ -3,6 +3,7 @@
 /**
  * @file
  * Provides a wrapper for a single dataobject created with this module.
+ * @todo Add summary fields, and default sort order.
  */
 
 class DataObjectCoach_Container extends DataObject {
