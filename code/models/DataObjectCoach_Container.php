@@ -3,6 +3,7 @@
 /**
  * @file
  * Provides a wrapper for a single dataobject created with this module.
+ * @todo Add summary fields, and default sort order.
  */
 
 class DataObjectCoach_Container extends DataObject {
@@ -13,28 +14,40 @@ class DataObjectCoach_Container extends DataObject {
 	private static $db = array(
 		'Name'         => 'Text',
 		'Editable'     => 'Boolean',
-		'Enabled'      => 'Boolean',
 		'Description'  => 'Text',
 
 		// Raw fields will be copied directly to code.
 		'RawClassName' => 'Text',
 		'RawParent'    => 'Text',
+
+		// Does this model need a controller? For template reasons.
+		'Controller'   => 'Boolean',
 	);
 
 	private static $has_many = array(
 		'Fields'  => 'DataObjectCoach_Field',
 		'Actions' => 'DataObjectCoach_Action',
 		'Groups'  => 'DataObjectCoach_Group',
+		'Move'    => 'DataObjectCoach_Move',
 	);
 
 	private static $singular_name = 'DataObject';
+
+	private static $defaults = array(
+		'Controller' => 1,
+	);
 
 	/**
 	 * Layout the fields for this dataobject.
 	 */
 	public function getCMSFields() {
+
 		// Prepare variables.
 		$fields = parent::getCMSFields();
+		$yesno = array(
+			TRUE => 'Yes',
+			FALSE => 'No',
+		);
 
 		// Change these fields to be single line text fields.
 		foreach (array(
@@ -56,19 +69,21 @@ class DataObjectCoach_Container extends DataObject {
 		}
 
 		// Is this editable inside the CMS?
-		$field = new DropdownField('Editable', 'Editable?', array(
-			TRUE => 'Yes',
-			FALSE => 'No',
-		));
-		$field->setDescription('Will this dataobject be editable inside the CMS?');
+		$field = new DropdownField('Editable', 'Editable?', $yesno);
+		$field->setDescription('Add the ability to edit this DataObject in the CMS?');
 		$fields->removeByName('Editable');
 		$fields->addFieldToTab('Root.Main', $field);
 
+		// Does this model have a controller too?
+		$field = new DropdownField('Controller', 'Add a controller for this model?', $yesno);
+		$field->setDescription('Add the ability to add a layout to the theme?');
+		$fields->addFieldToTab('Root.Main', $field);
+
 		// Remove enabled field and fields tab.
-		$fields->removeByName('Enabled');
 		$fields->removeByName('Fields');
 		$fields->removeByName('Actions');
 		$fields->removeByName('Groups');
+		$fields->removeByName('Move');
 
 		// If the dataobject is already in the database, let fields be added.
 		if ($this->ID) {
@@ -94,6 +109,13 @@ class DataObjectCoach_Container extends DataObject {
 			)->removeComponentsByType('GridFieldAddExistingAutocompleter');
 			$field = new GridField('Groups', 'Groups of fields for the CMS of this dataobject', $this->Groups(), $config);
 			$fields->addFieldToTab('Root.Groups', $field);
+
+			// What fields shall we rearrange?
+			$config = GridFieldConfig_RelationEditor::create()->addComponents(
+				new GridFieldSortableRows('Sort')
+			)->removeComponentsByType('GridFieldAddExistingAutocompleter');
+			$field = new GridField('Move', 'Add the fields you want to rearrange', $this->Move(), $config);
+			$fields->addFieldToTab('Root.Rearrange', $field);
 		}
 
 		// Done.
@@ -105,24 +127,6 @@ class DataObjectCoach_Container extends DataObject {
 	 */
 	public function getCMSValidator() {
 		return new DataObjectCoach_ContainerValidator();
-	}
-
-	/**
-	 * Before the object is written, check if it's valid or not.
-	 */
-	protected function onBeforeWrite() {
-
-		// Let the other code run first.
-		parent::onBeforeWrite();
-
-		// Count how many active fields there are.
-		$count = 0;
-		foreach ($this->Fields() as $field) {
-			$count += $field->Enabled ? 1 : 0;
-		}
-
-		// If this dataobject has no fields, it cannot be created.
-		$this->Enabled = $count > 0;
 	}
 
 	/**

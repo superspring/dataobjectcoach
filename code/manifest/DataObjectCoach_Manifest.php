@@ -62,37 +62,61 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 	}
 
 	/**
-	 * Get all virtual classes.
+	 * Get all virtual models.
 	 */
 	protected function getVirtualClasses() {
-		return DataObjectCoach_Container::get()->filter('Enabled', TRUE);
+		return DataObjectCoach_Container::get();
+	}
+
+	/**
+	 * Get all virtual controllers.
+	 */
+	protected function getVirtualControllers() {
+		return DataObjectCoach_Container::get()->filter('Controller', TRUE);
 	}
 
 	/**
 	 * Generate all the Virtual classes.
 	 */
 	protected function createVirtualClasses() {
+
 		// Go through all of the virtual classes.
 		foreach ($this->getVirtualClasses() as $class) {
 
-			// Is it enabled? Assume it's ok.
-			if ($class->Enabled == '1') {
-
-				// Prepare variables.
-				$name   = $class->RawClassName;
-				$parent = $class->RawParent;
-				if (!$parent) {
-					$parent = 'DataObject';
-				}
-
-				// Make it.
-				if (!class_exists($name)) {
-					$this->createClass($name, $parent);
-				}
-
-				// ...add to the class list.
-				$this->updateManifestList($name, $parent);
+			// Prepare variables.
+			$name   = $class->RawClassName;
+			$parent = $class->RawParent;
+			if (!$parent) {
+				$parent = 'DataObject';
 			}
+
+			// Make it.
+			if (!class_exists($name)) {
+				$this->createClass($name, $parent);
+			}
+
+			// ...add to the class list.
+			$this->updateManifestList($name, $parent);
+		}
+
+		// Go through all the virtual controllers.
+		foreach ($this->getVirtualControllers() as $control) {
+
+			// Prepare variables.
+			$name   = sprintf('%s_Controller', $control->RawClassName);
+			$parent = sprintf('%s_Controller', $control->RawParent);
+
+			if (!class_exists($parent)) {
+				$parent = 'ContentController';
+			}
+
+			// If it doesn't already exist...
+			if (!class_exists($name)) {
+				$this->createClass($name, $parent);
+			}
+
+			// ...add to the class list.
+			$this->updateManifestList($name, $parent);
 		}
 	}
 
