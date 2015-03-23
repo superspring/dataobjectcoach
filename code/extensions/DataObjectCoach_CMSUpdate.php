@@ -221,13 +221,15 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 
 		// Go through each tab
 		foreach ($cmsfields->toArray() as $tabset) {
-			foreach ($tabset->Tabs() as $tab) {
+			if (method_exists($tabset, 'Tabs')) {
+				foreach ($tabset->Tabs() as $tab) {
 
-				// ...and if any are empty
-				if ($tab->Fields()->count() == 0) {
+					// ...and if any are empty
+					if ($tab->Fields()->count() == 0) {
 
-					// ...then remove them.
-					$tabset->removeByName($tab->getName());
+						// ...then remove them.
+						$tabset->removeByName($tab->getName());
+					}
 				}
 			}
 		}
