@@ -178,8 +178,8 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 
 			// Prepare a summary field list.
 			$summary = array();
-			$defaults = $config->get($class->RawClassName, 'defaults') ?: array();
-			$index = $config->get($class->RawClassName, 'indexes') ?: array();
+			$defaults = $config->get($class->RawClassName, 'defaults', Config::UNINHERITED) ?: array();
+			$index = $config->get($class->RawClassName, 'indexes', Config::UNINHERITED) ?: array();
 			$extensions = $config->get($class->RawClassName, 'extensions') ?: array();
 
 			// Add all the individual fields.
@@ -341,15 +341,16 @@ class DataObjectCoach_Manifest extends SS_ClassManifest {
 		$manymanyextra = $config->get($name, 'many_many_extraFields');
 		$fieldname  = $field->RawName;
 		$fieldclass = $field->RawClassName;
-		$extraname  = $field->ExtraFieldName;
-		$extratype  = $field->ExtraFieldType;
 
 		// Add it to the list, or update.
 		if ($fieldname && $fieldclass) {
 			$manymany[$fieldname] = $fieldclass;
 		}
-		if ($extraname && $extratype) {
-			$manymanyextra[$extraname] = $extratype;
+		foreach ($field->ManyManyFields() as $manyfield) {
+			if (!array_key_exists($fieldname, $manymanyextra)) {
+				$manymanyextra[$fieldname] = array();
+			}
+			$manymanyextra[$fieldname][$manyfield->RawName] = $manyfield->Type;
 		}
 
 		// Update configuration.

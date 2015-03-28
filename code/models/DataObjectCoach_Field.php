@@ -19,9 +19,8 @@ class DataObjectCoach_Field extends DataObject {
 		'ValidEmpty'     => 'Boolean',
 		'ValidUnique'    => 'Boolean',
 		'IndexType'      => 'Text',
-		'ExtraFieldName' => 'Text',
-		'ExtraFieldType' => 'Text',
 		'FieldType'      => 'Text',
+		'FieldGridAutocomplete' => 'Boolean',
 		'SummaryField'   => 'Text',
 		'Description'    => 'Text',
 		'Sort'           => 'Int',
@@ -30,6 +29,10 @@ class DataObjectCoach_Field extends DataObject {
 	private static $has_one = array(
 		'Container' => 'DataObjectCoach_Container',
 		'Group'     => 'DataObjectCoach_Group',
+	);
+
+	private static $has_many = array(
+		'ManyManyFields' => 'DataObjectCoach_ExtraField',
 	);
 
 	private static $singular_name = 'Field';
@@ -128,7 +131,7 @@ class DataObjectCoach_Field extends DataObject {
 		// For the 'db' relation.
 		foreach (array(
 			'Type', 'RawArgs', 'ValidEmpty', 'ValidUnique', 'RawDefault', 'IndexType', 'Description', 'ContainerID',
-			'ExtraFieldName', 'ExtraFieldType', 'SummaryField', 'FieldType', 'Enabled', 'Sort', 'PrettyName',
+			'SummaryField', 'FieldType', 'Enabled', 'Sort', 'PrettyName', 'ManyManyFields', 'FieldGridAutocomplete',
 		) as $fieldname) {
 			$fields->removeByName($fieldname);
 		}
@@ -206,15 +209,11 @@ class DataObjectCoach_Field extends DataObject {
 			$fields->addFieldToTab('Root.Main', $field);
 		}
 		elseif ($this->Relation == 'many_many') {
-			// Add the extra field's name.
-			$field = new TextField('ExtraFieldName', 'Extra field name');
-			$field->setDescription('Name a linking field on this many_many relationship (empty for none)');
-			$fields->addFieldToTab('Root.Main', $field);
 
-			// Add the extra field's type.
-			$field = new TextField('ExtraFieldType', 'Extra field type');
-			$field->setDescription('The type of the linking field on this relationship (empty for none)');
-			$fields->addFieldToTab('Root.Main', $field);
+			$config = GridFieldConfig_RelationEditor::create()->removeComponentsByType('GridFieldAddExistingAutocompleter');
+			$field = new GridField('ManyManyFields', 'Extra fields', $this->ManyManyFields(), $config);
+			$field->setDescription('Name a linking field on this many_many relationship (empty for none)');
+			$fields->addFieldToTab('Root.Field', $field);
 		}
 
 		// Choose a field to edit the form.
@@ -222,6 +221,16 @@ class DataObjectCoach_Field extends DataObject {
 			$availablefields = $this->getFormFields();
 			$field = new DropdownField('FieldType', 'What type of field to use?', $availablefields);
 			$fields->addFieldToTab('Root.CMS', $field);
+
+			if ($this->FieldType == 'GridField') {
+				$yesno = array(
+					0 => 'No',
+					1 => 'Yes',
+				);
+
+				$field = new DropdownField('FieldGridAutocomplete', 'Should this allow an autocomplete?', $yesno);
+				$fields->addFieldToTab('Root.CMS', $field);
+			}
 
 			$description = new TextField('Description', 'Description');
 			$description->setDescription('What goes into this field?');

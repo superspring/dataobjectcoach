@@ -29,6 +29,7 @@ class DataObjectCoach_Container extends DataObject {
 		'Actions' => 'DataObjectCoach_Action',
 		'Groups'  => 'DataObjectCoach_Group',
 		'Move'    => 'DataObjectCoach_Move',
+		'Forms'   => 'DataObjectCoach_Form',
 	);
 
 	private static $singular_name = 'DataObject';
@@ -84,6 +85,7 @@ class DataObjectCoach_Container extends DataObject {
 		$fields->removeByName('Actions');
 		$fields->removeByName('Groups');
 		$fields->removeByName('Move');
+		$fields->removeByName('Forms');
 
 		// If the dataobject is already in the database, let fields be added.
 		if ($this->ID) {
@@ -94,28 +96,35 @@ class DataObjectCoach_Container extends DataObject {
 			)->removeComponentsByType('GridFieldAddExistingAutocompleter');
 			$config->getComponentByType('GridFieldPaginator')->setItemsPerPage(50);
 			$field = new GridField('Fields', 'Fields for this dataobject', $this->Fields(), $config);
-			$fields->addFieldToTab('Root.Fields', $field);
-
-			// What actions are in this dataobject?
-			$config = GridFieldConfig_RelationEditor::create()->addComponents(
-				new GridFieldSortableRows('Sort')
-			)->removeComponentsByType('GridFieldAddExistingAutocompleter');
-			$field = new GridField('Actions', 'Additional actions for this dataobject', $this->Actions(), $config);
-			$fields->addFieldToTab('Root.Actions', $field);
-
-			// What groups are in this dataobject?
-			$config = GridFieldConfig_RelationEditor::create()->addComponents(
-				new GridFieldSortableRows('Sort')
-			)->removeComponentsByType('GridFieldAddExistingAutocompleter');
-			$field = new GridField('Groups', 'Groups of fields for the CMS of this dataobject', $this->Groups(), $config);
-			$fields->addFieldToTab('Root.Groups', $field);
+			$fields->addFieldToTab('Root.AddFields', $field);
 
 			// What fields shall we rearrange?
 			$config = GridFieldConfig_RelationEditor::create()->addComponents(
 				new GridFieldSortableRows('Sort')
 			)->removeComponentsByType('GridFieldAddExistingAutocompleter');
 			$field = new GridField('Move', 'Add the fields you want to rearrange', $this->Move(), $config);
-			$fields->addFieldToTab('Root.Rearrange', $field);
+			$fields->addFieldToTab('Root.RearrangeFields', $field);
+
+			// What actions are in this dataobject?
+			$config = GridFieldConfig_RelationEditor::create()->addComponents(
+				new GridFieldSortableRows('Sort')
+			)->removeComponentsByType('GridFieldAddExistingAutocompleter');
+			$field = new GridField('Actions', 'Additional actions for this dataobject', $this->Actions(), $config);
+			$fields->addFieldToTab('Root.AddActions', $field);
+
+			// What groups are in this dataobject?
+			$config = GridFieldConfig_RelationEditor::create()->addComponents(
+				new GridFieldSortableRows('Sort')
+			)->removeComponentsByType('GridFieldAddExistingAutocompleter');
+			$field = new GridField('Groups', 'Groups of fields for the CMS of this dataobject', $this->Groups(), $config);
+			$fields->addFieldToTab('Root.GroupsOfFields', $field);
+
+			// Any forms to add to this controller?
+			if (class_exists('UserFormsGridFieldFilterHeader')) {
+				$config = GridFieldConfig_RelationEditor::create()->removeComponentsByType('GridFieldAddExistingAutocompleter');
+				$field = new GridField('Forms', 'Add any forms to this class?', $this->Forms(), $config);
+				$fields->addFieldToTab('Root.Forms', $field);
+			}
 		}
 
 		// Done.

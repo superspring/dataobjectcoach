@@ -14,6 +14,7 @@ class DataObjectCoach_EditForm extends DataExtension {
 
 		// Prepare variables.
 		$actions = $form->Actions();
+		$fields = $form->Fields();
 		$record = $form->getRecord();
 		$container = DataObjectCoach_Container::get()->filter(
 			'RawClassName', get_class($record)
@@ -26,6 +27,29 @@ class DataObjectCoach_EditForm extends DataExtension {
 				// Create the action and add it.
 				$naction = new FormAction($action->Type, $action->Name);
 				$actions->push($naction);
+			}
+		}
+
+		// Is this a many to many? What is the relationship?
+		$control = $form->getController();
+		$gridfield = $control->getGridField();
+		// What field is being used?
+		$field = $gridfield->getName();
+		$parentform = $gridfield->getForm();
+		$parentrecord = $parentform->getRecord();
+
+		// Does this match against anything DataObjectCoach is managing?
+		$container = DataObjectCoach_Container::get()->filter(
+			'RawClassName', get_class($parentrecord)
+		)->first();
+		if ($container) {
+			$field = $container->Fields()->filter(
+				'RawName', $field
+			)->first();
+			$obj = singleton('DataObjectCoach_CMSUpdate');
+			foreach ($field->ManyManyFields() as $mfield) {
+				$nfield = $obj->generateField($mfield);
+				$fields->addFieldToTab('Root.Coach', $nfield);
 			}
 		}
 	}
@@ -60,16 +84,18 @@ class DataObjectCoach_EditForm extends DataExtension {
 		)->first();
 
 		// Is this one of the Coach's actions?
-		foreach ($container->Actions() as $action) {
-			if (strtolower($action->Type) == $method) {
+		if ($container) {
+			foreach ($container->Actions() as $action) {
+				if (strtolower($action->Type) == $method) {
 
-				// Yes! Do something!
-				list($data, $form, $etc) = $args;
-				return singleton($action->Type)->action($data);
+					// Yes! Do something!
+					list($data, $form, $etc) = $args;
+					return singleton($action->Type)->action($data);
+				}
 			}
 		}
 
 		// Otherwise? Do whatever else was going to happen.
-		return parent::__call($method, $args);
+		return $record->__call($method, $args);
 	}
 }

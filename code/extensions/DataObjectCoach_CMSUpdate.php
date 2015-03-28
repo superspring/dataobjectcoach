@@ -138,6 +138,8 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 			$prettyname = $this->getPrettyName($class);
 			// Get a list of the fields directly from the parent class.
 			$values = $class::get()->map('ID', $prettyname);
+			// Add ID.
+			$name = $name . 'ID';
 		}
 		else {
 			// um...?
@@ -174,6 +176,9 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 
 			// Generate the default configuration for the field.
 			$config = GridFieldConfig_RelationEditor::create();
+			if (!$field->FieldGridAutocomplete) {
+				$config = $config->removeComponentsByType('GridFieldAddExistingAutocompleter');
+			}
 
 			// Create the field.
 			$nfield = new GridField($fieldname, $title, $list, $config);
@@ -325,7 +330,7 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 	/**
 	 * Create an appropriate field.
 	 */
-	protected function generateField($field) {
+	public function generateField($field) {
 
 		// If there is an issue, catch the exception.
 		try {
