@@ -164,18 +164,19 @@ class DataObjectCoach_CMSUpdate extends DataExtension {
 		}
 
 		// What DataList to put into this?
-		if ($field->Relation == 'has_many') {
+		if (in_array($field->Relation, array('has_many', 'many_many'))) {
 
 			// Get the raw datalist from the owner object.
-			$name = $field->RawName;
-			$title = $field->PrettyName ?: $name;
-			$list = $this->owner->$name();
+			$fieldname = $field->RawName;
+			$fieldtype = $field->RawClassName;
+			$title = $field->PrettyName ?: $fieldname;
+			$list = $this->owner->$fieldname();
 
 			// Generate the default configuration for the field.
 			$config = GridFieldConfig_RelationEditor::create();
 
 			// Create the field.
-			$nfield = new GridField($name, $title, $list, $config);
+			$nfield = new GridField($fieldname, $title, $list, $config);
 		}
 		else {
 			// um...?

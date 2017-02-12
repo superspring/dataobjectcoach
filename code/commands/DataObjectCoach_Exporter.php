@@ -69,8 +69,18 @@ EOF;
 		$classes = $args;
 
 		// Which classes to export?
-		if (reset($classes) == '--all') {
+		if (empty($classes)) {
+			return $this->showError('Expected at least one class to be exported');
+		}
+		elseif (reset($classes) == '--all') {
 			$classes = DataObjectCoach_Container::get()->map('RawClassName', 'RawClassName');
+		}
+
+		// Check the classes all exist.
+		foreach ($classes as $class) {
+			if (!DataObjectCoach_Container::get()->filter('RawClassName', $class)->first()) {
+				return $this->showError(sprintf('Unable to find class "%s"', $class));
+			}
 		}
 
 		// Put the files into the module.
@@ -288,12 +298,18 @@ EOF;
 		$variables = array();
 
 		// Go through each of the fields in this class.
-		foreach ($classobj->Fields() as $field) {
-			if (!array_key_exists($field->Relation, $variables)) {
-				$variables[$field->Relation] = array();
+		if ($classobj) {
+			foreach ($classobj->Fields() as $field) {
+				if (!array_key_exists($field->Relation, $variables)) {
+					$variables[$field->Relation] = array();
+				}
+				$variables[$field->Relation][] = $field->toCode();
 			}
-			$variables[$field->Relation][] = $field->toCode();
 		}
+
+		// Add in other configuration variables.
+		$variables['singular_name'] = $classobj->Name;
+		$variables['description'] = $classobj->Description;
 
 		// Done.
 		return $variables;
@@ -307,17 +323,8 @@ EOF;
 		// Define the class.
 		$code = sprintf("class %s extends DataObject {\n", $class);
 
-		// Get the variables associated with the class.
-		$variables = $this->getClassVariables($class);
-
-		// Generate the code.
-		foreach ($variables as $key => $values) {
-			$code .= sprintf("\tprivate static \$%s = array(\n", $key);
-			foreach ($values as $line_code) {
-				$code .= "\t\t" . $line_code . ",\n";
-			}
-			$code .= "\t);\n";
-		}
+		// Add class variables.
+		$code .= $this->generateClassVariables($class);
 
 		// End of class.
 		$code .= "}\n";
@@ -329,6 +336,7 @@ EOF;
 	 * Generates additional code to append an existing class.
 	 */
 	protected function generateAdditionalCode($class) {
+
 		// Define the class.
 		$newclass = 'DataObjectCoachVirtualClass_' . $class;
 		$code = sprintf(
@@ -336,23 +344,36 @@ EOF;
 			$newclass
 		);
 
+		// Add the extra line to config.
+		$this->configlines[] = sprintf("Object::add_extension('%s', '%s');", addslashes($class), addslashes($newclass));
+
+		return $code;
+	}
+
+	/**
+	 * Generates the class variables portion of the code.
+	 */
+	protected function generateClassVariables($class) {
+
+		// Prepare variables.
+		$code = '';
+
 		// Get the variables associated with the class.
 		$variables = $this->getClassVariables($class);
 
 		// Generate the code.
 		foreach ($variables as $key => $values) {
-			$code .= sprintf("\tprivate static \$%s = array(\n", $key);
-			foreach ($values as $line_code) {
-				$code .= "\t\t" . $line_code . ",\n";
+			if (is_array($values)) {
+				$code .= sprintf("\tprivate static \$%s = array(\n", $key);
+				foreach ($values as $line_code) {
+					$code .= "\t\t" . $line_code . ",\n";
+				}
+				$code .= "\t);\n";
 			}
-			$code .= "\t);\n";
+			else {
+				$code .= sprintf("\tprivate static \$%s = '%s';\n", $key, $values);
+			}
 		}
-
-		// End of class.
-		$code .= "}\n";
-
-		// Add the extra line to config.
-		$this->configlines[] = sprintf("Object::add_extension('%s', '%s');", addslashes($class), addslashes($newclass));
 
 		return $code;
 	}
